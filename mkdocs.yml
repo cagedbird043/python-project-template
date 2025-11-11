@@ -1,0 +1,14 @@
+site_name: Your Project
+site_description: A minimal documentation site for the template
+site_author: Your Name
+repo_url: https://github.com/yourusername/your-project
+repo_name: yourusername/your-project
+
+theme:
+  name: material
+  features:
+    - navigation.tabs
+    - navigation.sections
+
+nav:
+  - Home: index.md
