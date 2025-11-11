@@ -4,6 +4,8 @@
 
 这是一个包含所有最佳实践的 Python 项目模板，基于 Pixi + 现代化工具链。
 
+📖 **[查看完整文档](https://cagedbird043.github.io/python-project-template/)**
+
 ## ✨ 特性
 
 ### 🔧 开发工具
@@ -175,7 +177,7 @@ pixi run hooks-run       # 手动运行所有 hooks
 ```bash
 pixi run -e docs docs-serve    # 本地预览文档
 pixi run -e docs docs-build    # 构建文档
-pixi run -e docs docs-deploy   # 部署到 GitHub Pages
+# 部署由 GitHub Actions 自动完成，推送到 main 分支即可
 ```
 
 ### 构建发布
@@ -262,6 +264,15 @@ my-awesome-project/
 - 仅在 main 分支或 tag 上运行
 - 完整兼容性检查
 - 构建包
+
+### GitHub Pages 部署
+
+文档会自动部署到 GitHub Pages。**首次使用需要配置**：
+
+1. 进入仓库 **Settings** → **Pages**
+2. **Build and deployment** → **Source** 选择 **GitHub Actions**
+3. 推送到 `main` 分支时，文档会自动构建和部署
+4. 文档地址: `https://<username>.github.io/<repo-name>/`
 
 ## 🎯 最佳实践
 

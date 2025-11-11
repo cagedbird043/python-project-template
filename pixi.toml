@@ -142,12 +142,12 @@ run-pipeline = "echo 'Replace run-pipeline with your CLI entrypoint, e.g. python
 init = "python scripts/init_template.py"
 
 # ============================================================================
-# 文档任务
+# 文档任务 (使用 docs 环境: pixi run -e docs <task>)
 # ============================================================================
 
 docs-serve = "mkdocs serve"
 docs-build = "mkdocs build"
-docs-deploy = "mkdocs gh-deploy --force"
+# 注意: 文档部署由 GitHub Actions 自动完成，无需手动部署
 
 # ============================================================================
 # Git Hooks
