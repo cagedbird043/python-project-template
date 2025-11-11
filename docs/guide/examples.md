@@ -1,99 +1,154 @@
-# 示例
+# 使用示例
 
-## 场景 1: 清理 Claude 对话导出
+本页面展示如何使用此模板创建你自己的项目。
 
-假设你从 Claude 导出了对话数据:
+## 示例 1: 创建数据处理项目
 
-```json
-{
-  "messages": [
-    {
-      "role": "user",
-      "content": "What is Python?"
-    },
-    {
-      "role": "assistant",
-      "content": "<think>Let me explain...</think>Python is a programming language."
-    }
-  ]
-}
-```
+假设你想创建一个数据处理工具：
 
-清理并转换:
+### 1. 初始化项目
 
 ```bash
-pixi run run-pipeline claude_export.json -o python_qa.md --stats
+# 克隆模板
+git clone https://github.com/cagedbird043/python-project-template.git my-data-tool
+cd my-data-tool
+
+# 运行初始化脚本
+pixi run init-template
 ```
 
-结果 `python_qa.md`:
+### 2. 添加你的代码
 
-```markdown
-# Conversation
-
-**User:**
-What is Python?
-
-**Assistant:**
-Python is a programming language.
-
----
-
-📊 Statistics:
-
-- User messages: 1
-- Assistant messages: 1
-```
-
-## 场景 2: 批量处理多个文件
-
-```bash
-#!/bin/bash
-for file in conversations/*.json; do
-  pixi run run-pipeline "$file" -o "output/$(basename $file .json).md"
-done
-```
-
-## 场景 3: 保留思维过程用于分析
-
-```bash
-pixi run run-convert input.json --keep-think -o analysis.md
-```
-
-## 场景 4: 在 Python 脚本中使用
+在 `src/` 目录创建你的模块：
 
 ```python
-from src.cleaners import clean_conversation
-from src.converters import convert_to_markdown
-import json
-
-# 读取数据
-with open('input.json') as f:
-    data = json.load(f)
-
-# 清理
-cleaned = clean_conversation(data, remove_think=True)
-
-# 转换
-markdown = convert_to_markdown(
-    cleaned,
-    title="My Conversation",
-    add_stats=True
-)
-
-# 保存
-with open('output.md', 'w') as f:
-    f.write(markdown)
+# src/processor.py
+def process_data(data: list[dict]) -> list[dict]:
+    """处理数据"""
+    return [item for item in data if item.get('valid')]
 ```
 
-## 场景 5: CI/CD 集成
+### 3. 编写测试
 
-在 GitHub Actions 中使用:
+```python
+# tests/test_processor.py
+from src.processor import process_data
+
+def test_process_data():
+    data = [
+        {'id': 1, 'valid': True},
+        {'id': 2, 'valid': False},
+        {'id': 3, 'valid': True}
+    ]
+    result = process_data(data)
+    assert len(result) == 2
+    assert all(item['valid'] for item in result)
+```
+
+### 4. 运行测试
+
+```bash
+pixi run test
+```
+
+## 示例 2: 创建 CLI 工具
+
+### 添加 CLI 依赖
+
+```bash
+pixi add typer rich
+```
+
+### 创建 CLI 入口
+
+```python
+# src/cli.py
+import typer
+from rich import print
+
+app = typer.Typer()
+
+@app.command()
+def hello(name: str):
+    """问候用户"""
+    print(f"[bold green]Hello {name}![/bold green]")
+
+if __name__ == "__main__":
+    app()
+```
+
+### 配置任务
+
+在 `pixi.toml` 添加：
+
+```toml
+[tasks]
+cli = "python -m src.cli"
+```
+
+### 使用
+
+```bash
+pixi run cli hello World
+# Output: Hello World!
+```
+
+## 示例 3: 添加新的依赖
+
+```bash
+# 添加生产依赖
+pixi add requests pandas
+
+# 添加开发依赖
+pixi add --feature dev pytest-cov
+
+# 添加文档依赖
+pixi add --feature docs mkdocs-material
+```
+
+## 示例 4: 配置 Pre-commit
+
+模板已经包含 pre-commit 配置，你可以自定义：
 
 ```yaml
-- name: Process conversations
-  run: |
-    pixi install
-    pixi run run-pipeline data/conversations.json -o docs/processed.md
+# .pre-commit-config.yaml
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.8.4
+    hooks:
+      - id: ruff
+        args: [--fix]
+      - id: ruff-format
 ```
 
-更多示例请查看 [examples/](../../examples/) 目录。
+## 示例 5: 多环境测试
+
+测试多个 Python 版本：
+
+```bash
+# Python 3.12
+pixi run test-312
+
+# Python 3.13
+pixi run test-313
+
+# Python 3.14
+pixi run test-314
+```
+
+## 示例 6: CI/CD 集成
+
+模板已包含 GitHub Actions 配置，会自动：
+
+- 运行测试
+- 检查代码质量
+- 构建项目
+- 发布文档
+
+你可以根据需要修改 `.github/workflows/` 下的文件。
+
+## 更多资源
+
+- [CLI 命令参考](cli.md)
+- [Pre-commit 配置](pre-commit.md)
+- [CI 优化指南](ci-optimization.md)

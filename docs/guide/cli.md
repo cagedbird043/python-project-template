@@ -1,146 +1,131 @@
 # CLI 使用
 
-ConvoSync 提供了强大的命令行界面。
+本模板提供了 Pixi 任务系统来管理常用命令。
 
-## 命令概览
-
-```bash
-convo_sync <command> [options]
-```
-
-### 可用命令
-
-- `clean`: 清理 JSON 数据
-- `convert`: 转换为 Markdown
-- `pipeline`: 完整工作流
-
-## clean 命令
-
-清理和标准化 JSON 对话数据。
+## 查看可用任务
 
 ```bash
-pixi run run-clean <input> [options]
-```
-
-### 选项
-
-- `-o, --output FILE`: 输出文件路径 (默认: 添加 `.cleaned` 后缀)
-- `--think-tag TAG`: 自定义思维链标签 (默认: `think`)
-- `--remove-empty`: 移除空消息
-- `--verbose`: 详细输出
-
-### 示例
-
-```bash
-# 基本用法
-pixi run run-clean conversation.json
-
-# 指定输出
-pixi run run-clean input.json -o output.json
-
-# 自定义思维链标签
-pixi run run-clean input.json --think-tag "reasoning"
-
-# 移除空消息并显示详细信息
-pixi run run-clean input.json --remove-empty --verbose
-```
-
-## convert 命令
-
-将 JSON 转换为 Markdown 格式。
-
-```bash
-pixi run run-convert <input> [options]
-```
-
-### 选项
-
-- `-o, --output FILE`: 输出文件路径 (默认: 替换为 `.md` 扩展名)
-- `--keep-think`: 保留思维链内容
-- `--format FORMAT`: 输出格式 (`markdown`, `html`) (默认: `markdown`)
-- `--title TITLE`: 自定义文档标题
-- `--stats`: 在末尾添加统计信息
-
-### 示例
-
-```bash
-# 基本转换
-pixi run run-convert conversation.json
-
-# 保留思维链
-pixi run run-convert input.json --keep-think
-
-# 添加统计信息
-pixi run run-convert input.json -o output.md --stats
-
-# 自定义标题
-pixi run run-convert input.json --title "My Conversation"
-```
-
-## pipeline 命令
-
-执行完整的清理和转换流程。
-
-```bash
-pixi run run-pipeline <input> [options]
-```
-
-### 选项
-
-- `-o, --output FILE`: Markdown 输出路径
-- `--cleaned FILE`: 保存清理后的 JSON
-- `--stats`: 显示统计信息
-- `--all-options`: 应用所有优化选项
-
-### 示例
-
-```bash
-# 完整流程
-pixi run run-pipeline conversation.json
-
-# 指定所有输出
-pixi run run-pipeline input.json \
-  --cleaned cleaned.json \
-  -o output.md \
-  --stats
-
-# 应用所有优化
-pixi run run-pipeline input.json --all-options
-```
-
-## 使用 Pixi 任务
-
-项目预定义了方便的任务:
-
-```bash
-# 查看所有可用任务
 pixi task list
+```
 
+这会显示项目中配置的所有可用任务。
+
+## 常用任务
+
+### 开发任务
+
+```bash
 # 运行测试
 pixi run test
 
-# 代码检查
-pixi run lint
-pixi run typecheck
-pixi run check  # 运行所有检查
+# 运行特定测试文件
+pixi run test tests/test_example.py
 
-# 格式化代码
-pixi run format
+# 多版本测试
+pixi run test-312  # Python 3.12
+pixi run test-313  # Python 3.13
+pixi run test-314  # Python 3.14
 ```
 
-## Python API
+### 代码质量检查
 
-也可以在 Python 代码中使用:
+```bash
+# 代码格式检查
+pixi run lint
+
+# 类型检查
+pixi run typecheck
+
+# 安全检查
+pixi run security
+
+# 运行所有检查
+pixi run check
+```
+
+### 代码格式化
+
+```bash
+# 自动格式化代码
+pixi run format
+
+# 修复所有可修复的问题
+pixi run fix
+```
+
+### 构建和发布
+
+```bash
+# 构建项目
+pixi run build
+
+# 清理构建文件
+pixi run clean
+```
+
+### 文档
+
+```bash
+# 构建文档
+pixi run -e docs docs-build
+
+# 启动文档服务器
+pixi run -e docs docs-serve
+
+# 在浏览器中查看文档
+# 访问 http://127.0.0.1:8000
+```
+
+## 添加自定义任务
+
+在 `pixi.toml` 中的 `[tasks]` 部分添加你的任务：
+
+```toml
+[tasks]
+your-task = "your-command"
+```
+
+示例：
+
+```toml
+[tasks]
+# 运行你的主程序
+run = "python -m your_package_name"
+
+# 自定义测试
+test-verbose = "pytest -v"
+
+# 数据处理
+process-data = "python scripts/process.py"
+```
+
+## 使用 Python 包
+
+在你的项目中导入和使用你的代码：
 
 ```python
-from src.cleaners import clean_conversation
-from src.converters import convert_to_markdown
+# 从 src 目录导入
+from src.your_module import your_function
 
-# 清理数据
-cleaned = clean_conversation(data)
-
-# 转换为 Markdown
-markdown = convert_to_markdown(cleaned)
+# 使用你的代码
+result = your_function()
 ```
 
-查看 [API 文档](../api/cleaners.md) 了解更多。
+## 环境管理
+
+```bash
+# 安装依赖
+pixi install
+
+# 添加新依赖
+pixi add package-name
+
+# 添加开发依赖
+pixi add --feature dev package-name
+
+# 更新依赖
+pixi update
+
+# 查看环境信息
+pixi info
+```
