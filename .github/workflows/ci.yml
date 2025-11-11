@@ -1,0 +1,201 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# 并发控制：取消同一 PR 的旧运行
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # Layer 1: 快速检查 - 使用 Pixi 安装脚本
+  pre-commit:
+    name: Pre-commit Checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Pixi
+        run: curl -fsSL https://pixi.sh/install.sh | sh
+
+      - name: Add Pixi to PATH
+        run: echo "$HOME/.pixi/bin" >> $GITHUB_PATH
+
+      - name: Cache Pixi environment
+        uses: actions/cache@v4
+        with:
+          path: |
+            .pixi
+            ~/.cache/pre-commit
+          key: pixi-${{ runner.os }}-${{ hashFiles('pixi.lock', '.pre-commit-config.yaml') }}
+          restore-keys: |
+            pixi-${{ runner.os }}-
+
+      - name: Show Pixi version
+        run: pixi --version
+
+      - name: Show Python versions
+        run: pixi run show-versions
+
+      - name: Run pre-commit via Pixi
+        run: pixi run hooks-run
+
+  # Layer 2: Python 多版本兼容性测试（Linux）
+  test-compatibility:
+    name: Test Python ${{ matrix.python-version }}
+    needs: pre-commit
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    strategy:
+      fail-fast: false # 所有版本都要测试完
+      matrix:
+        python-version: ["3.12", "3.13", "3.14"]
+        include:
+          - python-version: "3.12"
+            pixi-environment: "py312"
+          - python-version: "3.13"
+            pixi-environment: "py313"
+          - python-version: "3.14"
+            pixi-environment: "py314"
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Pixi
+        run: curl -fsSL https://pixi.sh/install.sh | sh
+
+      - name: Add Pixi to PATH
+        run: echo "$HOME/.pixi/bin" >> $GITHUB_PATH
+
+      - name: Cache Pixi environment
+        uses: actions/cache@v4
+        with:
+          path: .pixi
+          key: pixi-${{ runner.os }}-${{ matrix.python-version }}-${{ hashFiles('pixi.lock') }}
+          restore-keys: |
+            pixi-${{ runner.os }}-${{ matrix.python-version }}-
+
+      - name: Test Python ${{ matrix.python-version }}
+        run: |
+          echo "Testing with Python ${{ matrix.python-version }}"
+          pixi run -e ${{ matrix.pixi-environment }} python-version
+          pixi run -e ${{ matrix.pixi-environment }} test
+
+      - name: Upload coverage for Python ${{ matrix.python-version }}
+        if: matrix.python-version == '3.14'
+        uses: codecov/codecov-action@v4
+        with:
+          files: ./htmlcov/coverage.xml,./coverage.xml
+          flags: py${{ matrix.python-version }}
+          name: python-${{ matrix.python-version }}
+          fail_ci_if_error: false
+
+  # Layer 3: 跨平台测试（macOS 和 Windows，只测最新 Python）
+  test-cross-platform:
+    name: Test ${{ matrix.os }} (Python 3.14)
+    needs: pre-commit
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    strategy:
+      fail-fast: true
+      matrix:
+        os: [macos-latest, windows-latest]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Pixi
+        run: curl -fsSL https://pixi.sh/install.sh | sh
+        shell: bash
+
+      - name: Add Pixi to PATH (Unix)
+        if: runner.os != 'Windows'
+        run: echo "$HOME/.pixi/bin" >> $GITHUB_PATH
+        shell: bash
+
+      - name: Add Pixi to PATH (Windows)
+        if: runner.os == 'Windows'
+        run: echo "$HOME/.pixi/bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+        shell: pwsh
+
+      - name: Cache Pixi environment
+        uses: actions/cache@v4
+        with:
+          path: .pixi
+          key: pixi-${{ runner.os }}-${{ hashFiles('pixi.lock') }}
+          restore-keys: |
+            pixi-${{ runner.os }}-
+
+      - name: Show environment
+        run: pixi run python-version
+
+      - name: Run tests
+        run: pixi run test
+
+  # Layer 4: 完整质量检查（仅主分支）
+  quality-full:
+    name: Full Quality & Compatibility Check
+    if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')
+    needs: [pre-commit, test-compatibility, test-cross-platform]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Pixi
+        run: curl -fsSL https://pixi.sh/install.sh | sh
+
+      - name: Add Pixi to PATH
+        run: echo "$HOME/.pixi/bin" >> $GITHUB_PATH
+
+      - name: Cache Pixi environment
+        uses: actions/cache@v4
+        with:
+          path: .pixi
+          key: pixi-full-${{ runner.os }}-${{ hashFiles('pixi.lock') }}
+          restore-keys: |
+            pixi-full-${{ runner.os }}-
+
+      - name: Run complete compatibility check
+        run: |
+          echo "=== Running full compatibility check across all Python versions ==="
+          pixi run check-compat
+
+      - name: Build package
+        run: pixi run build
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist-packages
+          path: dist/
+          retention-days: 7
+
+  # 状态汇总（可选，方便查看）
+  ci-success:
+    name: CI Success
+    needs: [pre-commit, test-compatibility, test-cross-platform]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Success
+        run: |
+          echo "✅ All CI checks passed!"
+          echo "- Pre-commit: ✅"
+          echo "- Python 3.12: ✅"
+          echo "- Python 3.13: ✅"
+          echo "- Python 3.14: ✅"
+          echo "- macOS: ✅"
+          echo "- Windows: ✅"
