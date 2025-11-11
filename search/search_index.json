@@ -1,0 +1,1 @@
+{"config":{"lang":["en"],"separator":"[\\s\\-]+","pipeline":["stopWordFilter"]},"docs":[{"location":"","title":"Template Documentation","text":"<p>This is a minimal documentation page for the project template.</p> <p>You can customize <code>mkdocs.yml</code> and add more pages under <code>docs/</code>.</p>"}]}
