@@ -3,18 +3,18 @@
 
 Usage:
     python scripts/init_template.py --name my_package --project "My Project"
+    pixi run init --name my_package --project "My Project"
 
 If no args provided, the script will prompt interactively.
 
 What this does:
-- Replaces placeholder names in pyproject.toml, pixi.toml, README.md, TEMPLATE_USAGE.md
+- Replaces placeholder names in pyproject.toml, pixi.toml, README.md, TEMPLATE_USAGE.md, mkdocs.yml
 - Updates [feature.docs.pypi-dependencies] key in pixi.toml
-- Renames `src/` to the package directory if needed
 - Prints next steps
 """
 import argparse
 import os
-import shutil
+import re
 
 ROOT = os.path.dirname(os.path.dirname(__file__))
 
@@ -23,6 +23,7 @@ FILES_TO_UPDATE = [
     "pixi.toml",
     "README.md",
     "TEMPLATE_USAGE.md",
+    "mkdocs.yml",
 ]
 
 
@@ -35,12 +36,11 @@ def replace_in_file(path: str, old: str, new: str) -> None:
 
 
 def update_pixi_pypi_dependency(old_name: str, new_name: str) -> None:
+    """Update the pypi-dependencies key in pixi.toml's docs feature."""
     p = os.path.join(ROOT, "pixi.toml")
     with open(p, "r", encoding="utf-8") as f:
         s = f.read()
-    # Replace the single-line pypi-dependencies entry under the docs feature if present.
-    import re
-
+    # Replace the single-line pypi-dependencies entry under the docs feature
     pattern = re.compile(r"(\[feature.docs.pypi-dependencies\]\s*\n)([^\n]*\n?)", re.M)
     replacement = f'[feature.docs.pypi-dependencies]\n{new_name} = {{ path = ".", editable = true }}\n'
     s_new = pattern.sub(replacement, s)
@@ -79,31 +79,24 @@ def main() -> int:
         replace_in_file(path, "your-package-name", pkg)
         replace_in_file(path, "your-project-name", project)
 
-    # Update pixi pypi-dependencies section if present
+    # Update pixi pypi-dependencies section
+    print("Updating pixi.toml pypi-dependencies...")
     try:
         update_pixi_pypi_dependency("your-package-name", pkg)
-    except Exception:
-        pass
+    except Exception as e:
+        print(f"Warning: Failed to update pypi-dependencies: {e}")
 
-    # Rename src/ to package name if src exists and package dir does not
-    src_dir = os.path.join(ROOT, "src")
-    target_dir = os.path.join(ROOT, pkg)
-    if os.path.isdir(src_dir) and not os.path.isdir(target_dir):
-        print(f"Renaming src/ -> {pkg}/")
-        shutil.move(src_dir, target_dir)
-        # Create src placeholder to avoid confusion
-        os.makedirs(src_dir, exist_ok=True)
-        with open(os.path.join(src_dir, "__init__.py"), "w", encoding="utf-8") as f:
-            f.write("# placeholder src directory created by template init\n")
-
-    print("\nInitialization complete. Next steps:")
-    print("  - Review pyproject.toml and pixi.toml for any remaining placeholders.")
-    print(
-        "  - Replace example tests and code in {}/ with your implementation.".format(
-            pkg
-        )
-    )
-    print('  - git add . && git commit -m "chore: personalize project from template"')
+    print("\n✅ Initialization complete!\n")
+    print("Next steps:")
+    print("  1. Review pyproject.toml and pixi.toml for any remaining placeholders")
+    print("  2. Update src/__init__.py with your package description")
+    print("  3. Replace example tests in tests/ with your test implementation")
+    print("  4. Commit the changes:")
+    print(f'     git add . && git commit -m "chore: initialize project as {pkg}"')
+    print("\nRun checks with:")
+    print("  pixi run check-all    # All quality checks")
+    print("  pixi run test         # Run tests")
+    print("  pixi run docs-serve   # Preview documentation")
     return 0
 
 
