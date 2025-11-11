@@ -129,3 +129,6 @@ exclude_lines = [
 [tool.bandit]
 exclude_dirs = ["tests", ".venv", "build", "dist"]
 skips = ["B101"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src"]
