@@ -23,9 +23,11 @@ mkdocs = ">=1.5"
 mkdocs-material = ">=9.5"
 mkdocstrings-python = ">=1.7"
 
+# Python 3.12 环境（最低支持版本）
 [feature.docs.pypi-dependencies]
-your-package-name = { path = ".", editable = true }
+# (Intentionally empty for template - run `pixi run init` to configure package)
 
+# Python 3.12 环境（最低支持版本）
 # Python 3.12 环境（最低支持版本）
 [feature.py312.dependencies]
 python = "3.12.*"
