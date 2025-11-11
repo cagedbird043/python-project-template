@@ -59,16 +59,16 @@ prod = { features = ["py314"] }
 # ============================================================================
 
 # 1. 格式化（最快，自动修复）
-format = "ruff format src/ tests/ convo_sync.py"
+format = "ruff format src/ tests/"
 
 # 2. Lint 检查（快速，发现明显问题）
-lint = "ruff check src/ tests/ convo_sync.py"
+lint = "ruff check src/ tests/"
 
 # 3. 类型检查（中速，发现类型问题）
-typecheck = "mypy src/ convo_sync.py"
+typecheck = "mypy src/"
 
 # 4. 安全检查（快速，发现安全问题）
-security = "bandit -r src/ convo_sync.py -ll"
+security = "bandit -r src/ -ll"
 
 # 5. 单元测试（当前环境）
 test = "python -m pytest tests/ -v --cov=src --cov-report=term-missing --cov-report=html -p no:requests_mock"
@@ -128,13 +128,16 @@ check-compat = { depends-on = [
 install = "uv sync --all-extras"
 
 # 运行清理
-run-clean = "python convo_sync.py clean"
+run-clean = "echo 'Replace run-clean with your CLI entrypoint, e.g. pixi run run-clean --pkg <your_pkg>'"
 
-# 运行转换
-run-convert = "python convo_sync.py convert"
+# 运行转换（请替换为你的 CLI，如: python -m your_package convert）
+run-convert = "echo 'Replace run-convert with your CLI entrypoint, e.g. python -m your_package convert'"
 
-# 运行完整管道
-run-pipeline = "python convo_sync.py pipeline"
+# 运行完整管道（请替换为你的 CLI）
+run-pipeline = "echo 'Replace run-pipeline with your CLI entrypoint, e.g. python -m your_package pipeline'"
+
+# 一键初始化模板（设置包名、项目名等）
+init = "python scripts/init_template.py"
 
 # ============================================================================
 # 文档任务
