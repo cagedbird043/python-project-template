@@ -169,6 +169,9 @@ mkdocs = ">=1.5"
 mkdocs-material = ">=9.5"
 mkdocstrings-python = ">=1.7"
 
+[tool.pixi.feature.docs.pypi-dependencies]
+your-package-name = { path = ".", editable = true }
+
 [tool.pixi.feature.py312.dependencies]
 python = "3.12.*"
 
