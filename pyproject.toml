@@ -1,10 +1,10 @@
 [build-system]
-requires = ["hatchling"]
+requires = ["hatchling", "hatch-vcs"]
 build-backend = "hatchling.build"
 
 [project]
 name = "your-package-name"
-version = "0.1.0"
+dynamic = ["version"]
 description = "A modern Python project with best practices"
 readme = "README.md"
 requires-python = ">=3.12,<3.15"
@@ -22,7 +22,10 @@ classifiers = [
     "Topic :: Software Development :: Libraries :: Python Modules",
     "Topic :: Text Processing :: Markup :: Markdown",
 ]
-dependencies = []
+dependencies = ["typer>=0.9.0"]
+
+[project.scripts]
+your-package-name = "your_package_name.cli:main"
 
 [project.optional-dependencies]
 dev = [
@@ -132,3 +135,83 @@ skips = ["B101"]
 
 [tool.hatch.build.targets.wheel]
 packages = ["src"]
+
+[tool.hatch.version]
+source = "vcs"
+
+[tool.hatch.build.hooks.vcs]
+version-file = "src/_version.py"
+
+[tool.pixi.workspace]
+channels = ["conda-forge"]
+platforms = ["linux-64", "osx-64", "osx-arm64", "win-64"]
+
+[tool.pixi.dependencies]
+uv = ">=0.1.0"
+typer = ">=0.20.0,<0.21"
+
+[tool.pixi.pypi-dependencies]
+your-package-name = { path = ".", editable = true }
+
+[tool.pixi.feature.dev.dependencies]
+pytest = ">=8.0"
+pytest-cov = ">=4.1"
+ruff = ">=0.3"
+mypy = ">=1.8"
+pre-commit = ">=3.6"
+bandit = ">=1.8"
+tox = ">=4.0"
+
+[tool.pixi.feature.docs.dependencies]
+mkdocs = ">=1.5"
+mkdocs-material = ">=9.5"
+mkdocstrings-python = ">=1.7"
+
+[tool.pixi.feature.py312.dependencies]
+python = "3.12.*"
+
+[tool.pixi.feature.py313.dependencies]
+python = "3.13.*"
+
+[tool.pixi.feature.py314.dependencies]
+python = "3.14.*"
+
+[tool.pixi.environments]
+default = { features = ["dev", "py313"] }
+py312 = { features = ["dev", "py312"] }
+py313 = { features = ["dev", "py313"] }
+py314 = { features = ["dev", "py314"] }
+docs = { features = ["docs", "py313"] }
+prod = { features = ["py313"] }
+
+[tool.pixi.tasks]
+format = "ruff format src/ tests/ --line-length=120"
+lint = "ruff check src/ tests/ --line-length=120"
+lint-fix = "ruff check src/ tests/ --line-length=120 --fix"
+typecheck = "mypy src/"
+security = "bandit -r src/ -ll"
+test = "python -m pytest tests/ -v --cov=src --cov-report=term-missing --cov-report=html --cov-report=xml -p no:requests_mock"
+test-all-versions = "echo '=== Testing Python 3.12 ===' && pixi run -e py312 test && echo '=== Testing Python 3.13 ===' && pixi run -e py313 test && echo '=== Testing Python 3.14 ===' && pixi run -e py314 test && echo '=== All Python versions tested successfully! ==='"
+python-version = "python --version && python -c 'import sys; print(f\"Python {sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}\")'"
+show-versions = "echo '=== Python 3.12 ===' && pixi run -e py312 python-version && echo '=== Python 3.13 ===' && pixi run -e py313 python-version && echo '=== Python 3.14 ===' && pixi run -e py314 python-version"
+check = { depends-on = ["format", "lint", "typecheck", "test"] }
+check-all = { depends-on = ["format", "lint", "typecheck", "security", "test"] }
+check-compat = { depends-on = [
+    "format",
+    "lint",
+    "typecheck",
+    "security",
+    "test-all-versions",
+] }
+run-clean = "echo 'Replace run-clean with your CLI entrypoint, e.g. your_package_name clean'"
+run-convert = "echo 'Replace run-convert with your CLI entrypoint, e.g. your_package_name convert'"
+run-pipeline = "echo 'Replace run-pipeline with your CLI entrypoint, e.g. your_package_name pipeline'"
+init = "python scripts/init_template.py"
+docs-serve = { cmd = "mkdocs serve", env = { PYTHONPATH = "." } }
+docs-build = { cmd = "mkdocs build", env = { PYTHONPATH = "." } }
+docs-deploy = { cmd = "mkdocs gh-deploy --force", env = { PYTHONPATH = "." } }
+hooks-install = "pre-commit install"
+hooks-run = "pre-commit run --all-files"
+build = "uv build"
+clean-build = "rm -rf build/ dist/ *.egg-info htmlcov/ .coverage .pytest_cache/ .mypy_cache/ .ruff_cache/"
+build-check = { depends-on = ["clean-build", "check-compat", "build"] }

@@ -45,6 +45,20 @@ markdown_extensions:
   - pymdownx.details
   - pymdownx.emoji
 
+plugins:
+  - search
+  - mkdocstrings:
+      default_handler: python
+      handlers:
+        python:
+          options:
+            docstring_style: google
+            merge_init_into_class: true
+            show_source: true
+            show_root_heading: true
+            show_root_full_path: false
+            show_object_full_path: false
+
 nav:
   - 主页: index.md
   - 开始使用:
@@ -55,4 +69,6 @@ nav:
       - Pre-commit 配置: guide/pre-commit.md
       - CI 优化: guide/ci-optimization.md
       - 示例: guide/examples.md
+  - API 文档:
+      - 核心模块: api/modules.md
   - 贡献指南: contributing.md

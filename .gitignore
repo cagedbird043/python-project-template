@@ -57,6 +57,9 @@ venv.bak/
 .pixi/
 pixi.lock
 
+# Auto-generated version file (by hatch-vcs)
+src/_version.py
+
 # MkDocs
 /site
 
